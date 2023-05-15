@@ -1,0 +1,11 @@
+all:
+  hosts:
+    example:
+      ansible_connection: ssh
+      ansible_host: example.com
+      ansible_port: 22
+      ansible_user: root
+  vars:
+    user: exampleUser
+    keys: https://github.com/example.keys
+    newSSHPort: 221

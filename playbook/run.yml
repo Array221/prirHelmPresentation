@@ -1,0 +1,59 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: Prepare server for PRiR presentation
+  hosts: all
+  become: yes
+  roles:
+    - role: array221.clearbox
+      vars:
+        sudoUser: '{{user}}'
+        sshKeysLink: '{{keys}}'
+        desiredLocale: pl_PL.UTF-8
+        desiredTimezone: Europe/Warsaw
+        sshPort: '{{newSSHPort}}'
+        additionalPackages:
+          - curl
+          - vim
+          - ranger
+          - pv
+          - less
+          - htop
+          - dnsutils
+          - byobu
+          - tmux
+    - geerlingguy.docker
+    - pandemonium1986.minikube
+    - pandemonium1986.kubectl
+    - pandemonium1986.kubectx
+    - pandemonium1986.helm
+  tasks:
+    - name: Add user to docker group
+      ansible.builtin.user:
+        name: '{{user}}'
+        append: true
+        groups:
+          - docker
+    - name: Pull docker image - nginx
+      community.docker.docker_image:
+        name: nginx
+        source: pull
+    - name: Pull docker image - dockercraft
+      community.docker.docker_image:
+        name: docker/dockercraft:latest
+        source: pull
+    - name: Copy dockercraft files
+      copy:
+        src: files/dockercraft
+        dest: '/home/{{user}}'
+    - name: Grant execution access to dockercraft start script
+      ansible.builtin.file:
+        path: '/home/{{user}}/dockercraft/start.sh'
+        owner: '{{user}}'
+        group: '{{user}}'
+        mode: "0755"
+    - name: Grant execution access to dockercraft stop script
+      ansible.builtin.file:
+        path: '/home/{{user}}/dockercraft/stop.sh'
+        owner: '{{user}}'
+        group: '{{user}}'
+        mode: "0755"
